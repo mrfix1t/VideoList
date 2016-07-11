@@ -1,19 +1,33 @@
 package com.mrfixit.videolist;
 
 import android.app.LoaderManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.content.Loader;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Video>> {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Video>>,
+        VideoAdapter.OnAdapterCallbacks, DownloadService.OnDownloadListener {
     private RecyclerView videoRecyclerView;
     private VideoAdapter adapter;
     private List<Video> videoList = new ArrayList<>();
+    private LinkedList<DownloadTask> pendingTasks = new LinkedList<>();
+
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    boolean bound = false;
+    private DownloadService downloadService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,9 +39,28 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(this, DownloadService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unbind from the service
+        if (bound) {
+            unbindService(mConnection);
+            bound = false;
+        }
+    }
+
+
     private void initRecyclerView() {
         videoRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        adapter = new VideoAdapter(videoList);
+        adapter = new VideoAdapter(videoList, this, this);
         videoRecyclerView.setAdapter(adapter);
     }
 
@@ -48,5 +81,49 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void onLoaderReset(Loader<List<Video>> loader) {
         videoList = new ArrayList<>();
         adapter.updateVideos(videoList);
+    }
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            DownloadService.LocalBinder binder = (DownloadService.LocalBinder) service;
+            downloadService = binder.getService();
+            bound = true;
+
+            if (!pendingTasks.isEmpty()) {
+                while (!pendingTasks.isEmpty()) {
+                    downloadService.downloadVideo(pendingTasks.poll(), MainActivity.this);
+                    Log.i(TAG, "send pending task");
+                }
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            bound = false;
+        }
+    };
+
+    @Override
+    public void needDownload(DownloadTask downloadTask) {
+        if (downloadService == null) {
+            pendingTasks.add(downloadTask);
+            Log.i(TAG, "add pending task");
+            return;
+        }
+        downloadService.downloadVideo(downloadTask, this);
+    }
+
+    @Override
+    public void onFinished(final int position) {
+        Log.i(TAG, "download finished, pos = " + position);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyItemChanged(position);
+            }
+        });
     }
 }

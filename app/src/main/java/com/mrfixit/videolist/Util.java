@@ -3,10 +3,13 @@ package com.mrfixit.videolist;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Created by Михаил on 29.06.2016.
@@ -43,5 +46,46 @@ public class Util {
             }
         }
         return null;
+    }
+
+
+    public static void saveUrl(final String filename, final String urlString) {
+        BufferedInputStream in = null;
+        FileOutputStream fout = null;
+        Log.i("video", "download video, url = " + urlString + " start");
+        try {
+            in = new BufferedInputStream(new URL(urlString).openStream());
+            fout = new FileOutputStream(filename);
+
+            final byte data[] = new byte[1024];
+            int count;
+            while ((count = in.read(data, 0, 1024)) != -1) {
+                fout.write(data, 0, count);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (fout != null) {
+                try {
+                    fout.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            Log.i("video", "download video, url = " + urlString + " finished");
+        }
+    }
+
+
+    public static String getVideoFileName(String url) {
+        String trimmed = url.substring(0, url.lastIndexOf("/"));
+        return trimmed.substring(trimmed.lastIndexOf("/") + 1);
     }
 }
