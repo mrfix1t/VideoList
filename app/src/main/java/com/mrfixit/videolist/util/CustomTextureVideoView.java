@@ -1,4 +1,4 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.util;
 
 import android.content.Context;
 import android.util.AttributeSet;

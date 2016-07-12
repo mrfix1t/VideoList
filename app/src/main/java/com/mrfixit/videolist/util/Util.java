@@ -1,4 +1,4 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.util;
 
 import android.content.Context;
 import android.util.Log;
@@ -25,7 +25,7 @@ public class Util {
 
             String str;
             boolean isFirst = true;
-            while ( (str = in.readLine()) != null ) {
+            while ((str = in.readLine()) != null) {
                 if (isFirst)
                     isFirst = false;
                 else
@@ -51,7 +51,6 @@ public class Util {
     public static void saveUrl(final String filename, final String urlString) {
         BufferedInputStream in = null;
         FileOutputStream fout = null;
-        Log.i("video", "download video, url = " + urlString + " start");
         try {
             in = new BufferedInputStream(new URL(urlString).openStream());
             fout = new FileOutputStream(filename);
@@ -78,7 +77,6 @@ public class Util {
                     e.printStackTrace();
                 }
             }
-            Log.i("video", "download video, url = " + urlString + " finished");
         }
     }
 

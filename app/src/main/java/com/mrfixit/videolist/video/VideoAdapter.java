@@ -1,4 +1,4 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.video;
 
 import android.app.Activity;
 import android.content.res.Resources;
@@ -12,6 +12,10 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.mrfixit.videolist.util.CustomTextureVideoView;
+import com.mrfixit.videolist.app.DownloadTask;
+import com.mrfixit.videolist.R;
+import com.mrfixit.videolist.util.Util;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;

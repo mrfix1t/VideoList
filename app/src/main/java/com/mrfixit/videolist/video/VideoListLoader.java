@@ -1,9 +1,11 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.video;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.mrfixit.videolist.util.Util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,19 +50,12 @@ public class VideoListLoader extends AsyncTaskLoader<List<Video>> {
     @Override
     public void deliverResult(List<Video> data) {
         if (isReset()) {
-            releaseResources(data);
             return;
         }
-
-        List<Video> oldData = this.data;
         this.data = data;
 
         if (isStarted()) {
             super.deliverResult(data);
-        }
-
-        if (oldData != null && oldData != data) {
-            releaseResources(oldData);
         }
     }
 
@@ -83,7 +78,6 @@ public class VideoListLoader extends AsyncTaskLoader<List<Video>> {
     protected void onReset() {
         onStopLoading();
         if (data != null) {
-            releaseResources(data);
             data = null;
         }
     }
@@ -91,10 +85,5 @@ public class VideoListLoader extends AsyncTaskLoader<List<Video>> {
     @Override
     public void onCanceled(List<Video> data) {
         super.onCanceled(data);
-        releaseResources(data);
     }
-
-    private void releaseResources(List<Video> data) {
-    }
-
 }

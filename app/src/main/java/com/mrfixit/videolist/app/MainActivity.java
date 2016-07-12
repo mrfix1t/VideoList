@@ -1,4 +1,4 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.app;
 
 import android.app.LoaderManager;
 import android.content.ComponentName;
@@ -12,6 +12,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+
+import com.mrfixit.videolist.R;
+import com.mrfixit.videolist.video.Video;
+import com.mrfixit.videolist.video.VideoAdapter;
+import com.mrfixit.videolist.video.VideoListLoader;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -42,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onStart() {
         super.onStart();
-        // Bind to LocalService
         Intent intent = new Intent(this, DownloadService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
@@ -50,7 +54,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onStop() {
         super.onStop();
-        // Unbind from the service
         if (bound) {
             unbindService(mConnection);
             bound = false;
@@ -72,11 +75,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING || newState == RecyclerView.SCROLL_STATE_IDLE) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING ||
+                        newState == RecyclerView.SCROLL_STATE_SETTLING ||
+                        newState == RecyclerView.SCROLL_STATE_IDLE) {
                     adapter.onScrolled(recyclerView);
                 }
             }
-
         });
     }
 
@@ -111,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             if (!pendingTasks.isEmpty()) {
                 while (!pendingTasks.isEmpty()) {
                     downloadService.downloadVideo(pendingTasks.poll(), MainActivity.this);
-                    Log.i(TAG, "send pending task");
+                    Log.i(TAG, "send pending download task");
                 }
             }
         }
@@ -119,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             bound = false;
+            pendingTasks.clear();
         }
     };
 

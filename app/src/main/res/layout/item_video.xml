@@ -3,13 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="@dimen/item_vertical_margin"
+    android:orientation="horizontal"
     android:paddingBottom="@dimen/item_vertical_margin"
-    android:paddingStart="@dimen/activity_horizontal_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingEnd="@dimen/activity_horizontal_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-    android:orientation="horizontal">
+    android:paddingStart="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/item_vertical_margin">
 
 
     <FrameLayout
@@ -19,19 +19,19 @@
 
         <ImageView
             android:id="@+id/item_video_thumbnail"
-            android:adjustViewBounds="true"
-            android:minHeight="@dimen/item_video_min_height"
             android:layout_width="@dimen/item_video_width"
-            android:layout_height="wrap_content" />
-        
-        <com.mrfixit.videolist.CustomTextureVideoView
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:minHeight="@dimen/item_video_min_height" />
+
+        <com.mrfixit.videolist.util.CustomTextureVideoView
             android:id="@+id/item_video_view"
             android:layout_width="@dimen/item_video_width"
-            android:minHeight="@dimen/item_video_min_height"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:background="@android:color/black"
             android:clickable="true"
+            android:minHeight="@dimen/item_video_min_height"
             android:visibility="invisible" />
 
         <ProgressBar
@@ -49,22 +49,22 @@
             android:layout_gravity="center"
             android:clickable="true"
             android:src="@mipmap/ic_play_circle"
-            android:tint="@android:color/white"/>
+            android:tint="@android:color/white" />
 
     </FrameLayout>
 
     <TextView
-        android:layout_toEndOf="@+id/item_video_container"
-        android:layout_toRightOf="@+id/item_video_container"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
         android:id="@+id/item_video_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        tools:text="When Dogecoin becomes an accepted currency in shops"
-        android:lines="3"
         android:layout_centerVertical="true"
-        android:ellipsize="end"/>
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_toEndOf="@+id/item_video_container"
+        android:layout_toRightOf="@+id/item_video_container"
+        android:ellipsize="end"
+        android:lines="3"
+        android:textSize="18sp"
+        tools:text="When Dogecoin becomes an accepted currency in shops" />
 
 </RelativeLayout>

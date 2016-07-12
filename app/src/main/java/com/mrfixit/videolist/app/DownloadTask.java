@@ -1,10 +1,10 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.app;
 
 public class DownloadTask {
     private int position;
     private String url;
 
-    DownloadTask(String url, int position) {
+    public DownloadTask(String url, int position) {
         this.position = position;
         this.url = url;
     }

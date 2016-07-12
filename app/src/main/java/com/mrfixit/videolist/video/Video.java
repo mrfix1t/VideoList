@@ -1,4 +1,4 @@
-package com.mrfixit.videolist;
+package com.mrfixit.videolist.video;
 
 public class Video {
     private String url;
