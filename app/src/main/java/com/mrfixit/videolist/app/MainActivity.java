@@ -26,12 +26,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         VideoAdapter.OnAdapterCallbacks, DownloadService.OnDownloadListener {
     private RecyclerView videoRecyclerView;
     private VideoAdapter adapter;
-    private List<Video> videoList = new ArrayList<>();
     private LinkedList<DownloadTask> pendingTasks = new LinkedList<>();
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    boolean bound = false;
+    private boolean bound = false;
     private DownloadService downloadService;
 
     @Override
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private void initRecyclerView() {
         videoRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        adapter = new VideoAdapter(videoList, this, this);
+        adapter = new VideoAdapter(this, this);
         videoRecyclerView.setHasFixedSize(true);
         videoRecyclerView.setAdapter(adapter);
         videoRecyclerView.setItemAnimator(null);
@@ -92,15 +91,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onLoadFinished(Loader<List<Video>> loader, List<Video> videos) {
         if (!videos.isEmpty()) {
-            videoList = videos;
-            adapter.updateVideos(videoList);
+            adapter.updateVideos(videos);
         }
     }
 
     @Override
     public void onLoaderReset(Loader<List<Video>> loader) {
-        videoList = new ArrayList<>();
-        adapter.updateVideos(videoList);
+        adapter.updateVideos(new ArrayList<Video>());
     }
 
 
@@ -128,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     };
 
     @Override
-    public void needDownload(DownloadTask downloadTask) {
+    public void onDownloadTask(DownloadTask downloadTask) {
         if (downloadService == null) {
             pendingTasks.add(downloadTask);
             Log.i(TAG, "add pending task");

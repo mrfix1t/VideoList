@@ -20,10 +20,11 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder> {
-    private List<Video> videoList;
+    private List<Video> videoList = new ArrayList<>();
     private OnAdapterCallbacks onAdapterCallbacks;
     private WeakReference<Activity> activityWeakReference;
 
@@ -33,11 +34,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder>
     private VideoHolder currentHolder;
 
     public interface OnAdapterCallbacks {
-        void needDownload(DownloadTask task);
+        void onDownloadTask(DownloadTask task);
     }
 
-    public VideoAdapter(List<Video> videoList, OnAdapterCallbacks callbacks, Activity activity) {
-        this.videoList = videoList;
+    public VideoAdapter(OnAdapterCallbacks callbacks, Activity activity) {
         onAdapterCallbacks = callbacks;
         activityWeakReference = new WeakReference<>(activity);
         videoRequestHandler = new VideoRequestHandler();
@@ -65,19 +65,21 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder>
     public void onBindViewHolder(final VideoHolder holder, int position) {
         Video video = videoList.get(position);
         holder.titleTextView.setText(video.getTitle());
-
-        File file = new File(activityWeakReference.get().getFilesDir(), Util.getVideoFileName(video.getUrl()));
+        //resize videoView to default size
         Resources resources = activityWeakReference.get().getResources();
         int width = (int) resources.getDimension(R.dimen.item_video_width);
         int height = (int) resources.getDimension(R.dimen.item_video_min_height);
         Util.resizeView(holder.videoView, width, height);
-        if (file.exists()) {
-            holder.videoUri = file.getPath();
-            picassoInstance.load(videoRequestHandler.SCHEME_VIDEO + ":" + file.getPath()).into(holder.thumbnailImageView);
+
+        File videoFile = new File(activityWeakReference.get().getFilesDir(), Util.getVideoFileName(video.getUrl()));
+
+        if (videoFile.exists()) {
+            holder.videoUri = videoFile.getPath();
+            picassoInstance.load(videoRequestHandler.SCHEME_VIDEO + ":" + videoFile.getPath()).into(holder.thumbnailImageView);
             holder.videoPlayButton.setVisibility(View.VISIBLE);
             holder.videoProgressBar.setVisibility(View.INVISIBLE);
         } else {
-            onAdapterCallbacks.needDownload(new DownloadTask(video.getUrl(), position));
+            onAdapterCallbacks.onDownloadTask(new DownloadTask(video.getUrl(), position));
             holder.videoProgressBar.setVisibility(View.VISIBLE);
             holder.videoView.setVisibility(View.INVISIBLE);
             holder.videoPlayButton.setVisibility(View.INVISIBLE);
@@ -94,8 +96,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder>
     @Override
     public void onViewRecycled(VideoHolder holder) {
         if (holder == currentHolder) {
-            currentHolder = null;
-            holder.stopVideo();
+            holder.stopVideo(currentHolder);
         }
         holder.videoView.stopPlayback();
         super.onViewRecycled(holder);
@@ -129,18 +130,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder>
             videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
-                    int width = mp.getVideoWidth();
-                    int height = mp.getVideoHeight();
                     videoView.setIsPrepared(true);
-                    Activity activity = activityWeakReference.get();
-                    if (activity == null) {
-                        return;
-                    }
-                    int widthDim = (int) activity.getResources().getDimension(R.dimen.item_video_width);
-                    Util.resizeView(videoView, widthDim,
-                            widthDim * height / width);
+                    resizeVideoView(mp);
                     if (currentHolder == VideoHolder.this) {
-                        thumbnailImageView.setVisibility(View.GONE);
+                        thumbnailImageView.setVisibility(View.INVISIBLE);
                         videoProgressBar.setVisibility(View.INVISIBLE);
                         videoView.setVisibility(View.VISIBLE);
                         videoView.seekTo(0);
@@ -153,42 +146,30 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder>
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (!hasFocus && currentHolder == VideoHolder.this) {
-                        stopVideo();
+                        stopVideo(currentHolder);
                     }
                 }
             });
+
             videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    thumbnailImageView.setVisibility(View.VISIBLE);
-                    videoPlayButton.setVisibility(View.VISIBLE);
-                    if (videoView.getVisibility() == View.VISIBLE) {
-                        videoView.setVisibility(View.INVISIBLE);
-                    }
-                    videoProgressBar.setVisibility(View.INVISIBLE);
-                    currentHolder = null;
+                    setDefaultState(VideoHolder.this);
                 }
             });
+
             videoPlayButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (currentHolder != null && currentHolder != VideoHolder.this) {
-                        currentHolder.videoView.pause();
-                        currentHolder.thumbnailImageView.setVisibility(View.INVISIBLE);
-                        currentHolder.videoPlayButton.setVisibility(View.VISIBLE);
-                        currentHolder.videoProgressBar.setVisibility(View.INVISIBLE);
-                        if (currentHolder.videoView.getVisibility() == View.VISIBLE) {
-                            currentHolder.videoView.setVisibility(View.INVISIBLE);
-                        }
-                        currentHolder = null;
+                        stopVideo(currentHolder);
                     }
 
                     currentHolder = VideoHolder.this;
 
-                    videoPlayButton.setVisibility(View.INVISIBLE);
-                    videoProgressBar.setVisibility(View.VISIBLE);
-                    videoView.setVisibility(View.VISIBLE);
                     thumbnailImageView.setVisibility(View.INVISIBLE);
+                    videoPlayButton.setVisibility(View.INVISIBLE);
+                    videoView.setVisibility(View.VISIBLE);
                     if (!videoUri.equals(videoView.getVideoPath())) {
                         videoView.setIsPrepared(false);
                         videoView.setVideoPath(videoUri);
@@ -205,30 +186,42 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoHolder>
                     }
                 }
             });
-
         }
 
-        public void stopVideo() {
-            videoView.pause();
-            if (videoView.getVisibility() == View.VISIBLE) {
-                videoView.setVisibility(View.INVISIBLE);
-            }
-            thumbnailImageView.setVisibility(View.VISIBLE);
-            videoPlayButton.setVisibility(View.VISIBLE);
-            videoProgressBar.setVisibility(View.INVISIBLE);
+        private void stopVideo(VideoHolder videoHolder) {
+            videoHolder.videoView.pause();
+            setDefaultState(videoHolder);
+        }
+
+        private void setDefaultState(VideoHolder videoHolder) {
+            videoHolder.videoView.setVisibility(View.INVISIBLE);
+            videoHolder.thumbnailImageView.setVisibility(View.VISIBLE);
+            videoHolder.videoPlayButton.setVisibility(View.VISIBLE);
+            videoHolder.videoProgressBar.setVisibility(View.INVISIBLE);
             currentHolder = null;
         }
 
-        public void onScrolled(RecyclerView recyclerView) {
+        private void onScrolled(RecyclerView recyclerView) {
             if (isViewNotVisible(videoPlayButton, recyclerView) || isViewNotVisible(videoProgressBar, recyclerView)) {
-                stopVideo();
+                stopVideo(this);
             }
         }
 
-        public boolean isViewNotVisible(View view, RecyclerView recyclerView) {
+        private boolean isViewNotVisible(View view, RecyclerView recyclerView) {
             Rect scrollBounds = new Rect();
             recyclerView.getHitRect(scrollBounds);
             return view.getVisibility() == View.VISIBLE && !view.getLocalVisibleRect(scrollBounds);
+        }
+
+        private void resizeVideoView(MediaPlayer mp) {
+            int width = mp.getVideoWidth();
+            int height = mp.getVideoHeight();
+            Activity activity = activityWeakReference.get();
+            if (activity == null) {
+                return;
+            }
+            int widthDim = (int) activity.getResources().getDimension(R.dimen.item_video_width);
+            Util.resizeView(videoView, widthDim, widthDim * height / width);
         }
     }
 }
