@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.mrfixit.videolist.R;
 import com.mrfixit.videolist.video.Video;
@@ -25,6 +27,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Video>>,
         VideoAdapter.OnAdapterCallbacks, DownloadService.OnDownloadListener {
     private RecyclerView videoRecyclerView;
+    private ProgressBar progressBar;
     private VideoAdapter adapter;
     private LinkedList<DownloadTask> pendingTasks = new LinkedList<>();
 
@@ -37,7 +40,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        videoRecyclerView = (RecyclerView) findViewById(R.id.video_recycler_view);
+        videoRecyclerView = (RecyclerView) findViewById(R.id.activity_main_video_recycler_view);
+        progressBar = (ProgressBar) findViewById(R.id.activity_main_progress_bar);
         initRecyclerView();
         getLoaderManager().initLoader(0, null, this);
     }
@@ -85,11 +89,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public Loader<List<Video>> onCreateLoader(int i, Bundle bundle) {
+        progressBar.setVisibility(View.VISIBLE);
         return new VideoListLoader(this);
     }
 
     @Override
     public void onLoadFinished(Loader<List<Video>> loader, List<Video> videos) {
+        progressBar.setVisibility(View.GONE);
         if (!videos.isEmpty()) {
             adapter.updateVideos(videos);
         }
@@ -97,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoaderReset(Loader<List<Video>> loader) {
+        progressBar.setVisibility(View.GONE);
         adapter.updateVideos(new ArrayList<Video>());
     }
 
