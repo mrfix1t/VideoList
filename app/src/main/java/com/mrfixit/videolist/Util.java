@@ -2,6 +2,8 @@ package com.mrfixit.videolist;
 
 import android.content.Context;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -11,9 +13,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-/**
- * Created by Михаил on 29.06.2016.
- */
 public class Util {
     private static final String TAG = Util.class.getSimpleName();
 
@@ -87,5 +86,13 @@ public class Util {
     public static String getVideoFileName(String url) {
         String trimmed = url.substring(0, url.lastIndexOf("/"));
         return trimmed.substring(trimmed.lastIndexOf("/") + 1);
+    }
+
+
+    public static void resizeView(View view, int width, int height) {
+        ViewGroup.LayoutParams layout = view.getLayoutParams();
+        layout.width = width;
+        layout.height = height;
+        view.setLayoutParams(layout);
     }
 }

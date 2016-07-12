@@ -5,15 +5,12 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Created by Михаил on 06.07.2016.
- */
 public class DownloadService extends Service {
     private final IBinder binder = new LocalBinder();
     private ExecutorService executorService;
@@ -43,13 +40,18 @@ public class DownloadService extends Service {
     }
 
 
-    public void downloadVideo(final DownloadTask downloadTask, final OnDownloadListener listener) {
+    public void downloadVideo(final DownloadTask downloadTask, OnDownloadListener listener) {
+        final WeakReference<OnDownloadListener> onDownloadListenerWeakReference
+                = new WeakReference<>(listener);
         executorService.submit(new Runnable() {
             @Override
             public void run() {
                 File file = new File(getFilesDir(), Util.getVideoFileName(downloadTask.getUrl()));
                 Util.saveUrl(file.getAbsolutePath(), downloadTask.getUrl());
-                listener.onFinished(downloadTask.getPosition());
+                OnDownloadListener onDownloadListener = onDownloadListenerWeakReference.get();
+                if (onDownloadListener != null) {
+                    onDownloadListener.onFinished(downloadTask.getPosition());
+                }
             }
         });
     }

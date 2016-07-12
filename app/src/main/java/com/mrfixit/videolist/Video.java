@@ -1,8 +1,5 @@
 package com.mrfixit.videolist;
 
-/**
- * Created by Михаил on 29.06.2016.
- */
 public class Video {
     private String url;
     private String title;

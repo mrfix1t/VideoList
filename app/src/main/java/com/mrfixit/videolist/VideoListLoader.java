@@ -12,9 +12,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Михаил on 29.06.2016.
- */
 public class VideoListLoader extends AsyncTaskLoader<List<Video>> {
     private Context context;
 

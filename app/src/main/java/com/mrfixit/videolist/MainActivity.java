@@ -61,7 +61,23 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void initRecyclerView() {
         videoRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         adapter = new VideoAdapter(videoList, this, this);
+        videoRecyclerView.setHasFixedSize(true);
         videoRecyclerView.setAdapter(adapter);
+        videoRecyclerView.setItemAnimator(null);
+        videoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING || newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    adapter.onScrolled(recyclerView);
+                }
+            }
+
+        });
     }
 
     @Override

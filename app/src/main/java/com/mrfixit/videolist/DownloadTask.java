@@ -1,8 +1,5 @@
 package com.mrfixit.videolist;
 
-/**
- * Created by Михаил on 11.07.2016.
- */
 public class DownloadTask {
     private int position;
     private String url;
